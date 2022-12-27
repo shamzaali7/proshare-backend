@@ -1,0 +1,22 @@
+{
+  "name": "proshare-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shamzaali7/proshare-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shamzaali7/proshare-backend/issues"
+  },
+  "homepage": "https://github.com/shamzaali7/proshare-backend#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
