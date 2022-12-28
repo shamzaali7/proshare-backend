@@ -4,6 +4,7 @@ mongoose.set('strictQuery', false)
 mongoose.Promise = Promise;
 
 let mongoURI = process.env.DB_URL
+const database = mongoose.connection;
 
 
 mongoose
@@ -13,5 +14,12 @@ mongoose
     )
     .catch((error) => console.log('Connection failed!', error));
     
+database.on('error', (err) => console.log(err.message + ' is Mongosh not running?'));
+database.on('connected', () => console.log('mongo connected at: ', mongoURI));
+database.on('disconnected', () => console.log('mongo disconnected'));
+
+database.on('open', () => {
+	console.log('✅ mongo connection made!');
+});
 
 module.exports = mongoose
