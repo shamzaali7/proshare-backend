@@ -1,11 +1,10 @@
 const mongoose = require("mongoose")
-require("dotenv").config();
 mongoose.set('strictQuery', false)
 mongoose.Promise = Promise;
+require('dotenv').config();
 
 let mongoURI = process.env.DB_URL
 const database = mongoose.connection;
-
 
 mongoose
     .connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
