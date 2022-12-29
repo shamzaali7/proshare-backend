@@ -31,4 +31,17 @@ router.post("/", async (req, res, next) => {
     }
 })
 
+router.put("/:_id", async(req, res, next) => {
+    try{
+        const updateProject = await projectModel.findOneAndUpdate(req.params._id, req.body, {new: true})
+        if(updateProject){
+            res.status(200).json(updateProject)
+        }else{
+            res.sendStatus(404)
+        }
+    }catch(err){
+        next(err)
+    }
+})
+
 module.exports = router

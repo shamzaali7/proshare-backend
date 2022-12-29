@@ -9,9 +9,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.get("/", (req, res) => {
-//     res.redirect("home")
-// });
+app.get("/", (req, res) => {
+    res.redirect("/projects")
+});
 
 const userController = require("./controllers/userController")
 app.use("/users", userController)
