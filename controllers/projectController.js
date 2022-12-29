@@ -1,8 +1,7 @@
 const express = require("express")
 const router = express.Router()
-const ProjectModel = require('../models/projectModel')
-
-
+const projectModel = require('../models/projectModel')
+  
 
 
 module.exports = router
