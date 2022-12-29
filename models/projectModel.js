@@ -11,7 +11,7 @@ const projectSchema = new Schema({
     deployedLink: String,
     picture: String,
     code: String,
-    user: {type: Schema.Types.ObjectId, ref: "userModel"},
+    user: {type: String, ref: "userModel"},
     comments: [commentSchema]
 })
 
