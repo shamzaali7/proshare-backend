@@ -4,6 +4,9 @@
         "github": "https://github.com/shamzaali7/proshare-backend",
         "deployedLink": "https://nba-stat-comparison.vercel.app/fighters",
         "picture": "https://i.imgur.com/BZDU0nD.png",
-        "code": "This is my code"
+        "code": "This is my code",
+        "comments": ["Hello!", "Nice Project!"],
+        "gid": "110623457638922907156",
+        "user": ""
     }
 ]
