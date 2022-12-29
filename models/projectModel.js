@@ -11,7 +11,8 @@ const projectSchema = new Schema({
     deployedLink: String,
     picture: String,
     code: String,
-    comments: [commentSchema],
+    user: {type: Schema.Types.ObjectId, ref: "userModel"},
+    comments: [commentSchema]
 })
 
 module.exports = mongoose.model("Project", projectSchema)

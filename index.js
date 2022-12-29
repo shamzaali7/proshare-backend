@@ -2,10 +2,6 @@ const express = require("express");
 const app = express();
 app.set("port", process.env.PORT || 4000);
 const cors = require("cors");
-const fetch = (...args) => {
-    import("node-fetch").then(({default: fetch}) => fetch(...args));
-}
-const bodyParser = require("body-parser");
 
 app.use(cors({
     origin: "*"
@@ -18,7 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 const userController = require("./controllers/userController")
-app.use("/home", userController)
+app.use("/users", userController)
+const projectController = require("./controllers/projectController")
+app.use("/projects", projectController)
 
 if(!module.parent){
 	app.listen(app.get("port"), () => {
@@ -29,7 +27,10 @@ if(!module.parent){
 module.exports = app
 
 
-
+// const fetch = (...args) => {
+//     import("node-fetch").then(({default: fetch}) => fetch(...args));
+// }
+// const bodyParser = require("body-parser");
 // app.get("/getAccessToken", async function(req, res){
 //     console.log(req.query.code, CLIENT_ID, CLIENT_SECRET);
 //     // const params = "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&code=" + req.query.code;
