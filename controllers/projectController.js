@@ -1,11 +1,11 @@
 const express = require("express")
 const router = express.Router()
-const projectModel = require('../models/projectModel')
-const userModel = require("../models/userModel")
+const ProjectModel = require('../models/projectModel')
+const UserModel = require("../models/userModel")
   
 router.get("/", async (req, res, next) => {
     try{
-        const getProjects = await projectModel.find({})
+        const getProjects = await ProjectModel.find({})
         res.json(getProjects)
     }catch(err){
         next(err)
@@ -14,8 +14,8 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
     try{
-        const user = await userModel.findOne({googleid: req.body.gid})
-        const createProject = await projectModel.create({
+        const user = await UserModel.findOne({googleid: req.body.gid})
+        const createProject = await ProjectModel.create({
             title: req.body.title,
             github: req.body.github,
             deployedLink: req.body.deployedLink,
@@ -33,7 +33,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:_id", async(req, res, next) => {
     try{
-        const updateProject = await projectModel.findOneAndUpdate(req.params._id, req.body, {new: true})
+        const updateProject = await ProjectModel.findOneAndUpdate(req.params._id, req.body, {new: true})
         if(updateProject){
             res.status(200).json(updateProject)
         }else{
@@ -46,7 +46,7 @@ router.put("/:_id", async(req, res, next) => {
 
 router.delete("/:_id", async (req, res, next) => {
     try{
-        const deleteProject = await projectModel.findByIdAndDelete(req.params._id)
+        const deleteProject = await ProjectModel.findByIdAndDelete(req.params._id)
         if(deleteProject){
             res.status(200).json(deleteProject)
         }else{
