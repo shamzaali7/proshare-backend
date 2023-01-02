@@ -10,13 +10,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-    res.redirect("/projects")
+    res.redirect("/api/projects")
 });
 
 const userController = require("./controllers/userController")
-app.use("/users", userController)
+app.use("/api/users", userController)
 const projectController = require("./controllers/projectController")
-app.use("/projects", projectController)
+app.use("/api/projects", projectController)
 
 if(!module.parent){
 	app.listen(app.get("port"), () => {
