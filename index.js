@@ -26,7 +26,6 @@ if(!module.parent){
 
 module.exports = app
 
-
 // const fetch = (...args) => {
 //     import("node-fetch").then(({default: fetch}) => fetch(...args));
 // }
