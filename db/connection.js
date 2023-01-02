@@ -3,7 +3,11 @@ mongoose.set('strictQuery', false)
 mongoose.Promise = Promise;
 require('dotenv').config();
 
-let mongoURI = process.env.DB_URL
+if (process.env.NODE_ENV === "production") {
+    mongoURI = process.env.DB_URL;
+  } else {
+    mongoURI = "mongodb://localhost/book-e";
+  }  
 const database = mongoose.connection;
 
 mongoose
