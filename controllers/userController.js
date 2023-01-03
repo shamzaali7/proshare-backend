@@ -39,7 +39,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:gid", async(req, res, next) => {
     try{
-        const updateUser = await UserModel.findOneAndUpdate(req.body.gid, req.body, {new: true})
+        const updateUser = await UserModel.findOneAndUpdate(req.body.googleid, req.body, {new: true})
         if(updateUser){
             res.status(200).json(updateUser)
         }else{
