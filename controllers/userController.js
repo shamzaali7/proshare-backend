@@ -13,7 +13,7 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:gid", async (req, res, next) => {
     try{
-        const getUsersByGID = await UserModel.find({gid: req.gid})
+        const getUsersByGID = await UserModel.find({gid: req.params.gid})
         res.json(getUsersByGID)
     }catch(err){
         next(err)
