@@ -33,7 +33,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:_id", async(req, res, next) => {
     try{
-        const updateProject = await ProjectModel.findOneAndUpdate(req.params._id, req.body, {new: true})
+        const updateProject = await ProjectModel.findByIdAndUpdate(req.params._id, req.body, {new: true})
         if(updateProject){
             res.status(200).json(updateProject)
         }else{
