@@ -37,6 +37,19 @@ router.post("/", async (req, res, next) => {
     }
 })
 
+router.put("/:gid", async(req, res, next) => {
+    try{
+        const updateUser = await UserModel.findOneAndUpdate({gid: req.gid}, req.body, {new: true})
+        if(updateUser){
+            res.status(200).json(updateUser)
+        }else{
+            res.sendStatus(404)
+        }
+    }catch(err){
+        next(err)
+    }
+})
+
 router.delete("/:_id", async (req, res, next) => {
     try{
         const deleteUser = await UserModel.findByIdAndDelete(req.params._id)
