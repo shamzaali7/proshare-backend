@@ -11,6 +11,15 @@ router.get("/", async (req, res, next) => {
     }
 })
 
+router.get("/:gid", async (req, res, next) => {
+    try{
+        const getUsersByGID = await UserModel.find({gid: req.gid})
+        res.json(getUsersByGID)
+    }catch(err){
+        next(err)
+    }
+})
+
 router.post("/", async (req, res, next) => {
     try{
         const createUser = await UserModel.create({
@@ -18,6 +27,11 @@ router.post("/", async (req, res, next) => {
             email: req.body.email,
             name: req.body.name
         })
+        if (createUser){
+            res.status(200).json(createUser)
+        }else{
+            res.sendStatus(404)
+        }
     }catch(err){
         next(err)
     }
@@ -25,9 +39,9 @@ router.post("/", async (req, res, next) => {
 
 router.delete("/:_id", async (req, res, next) => {
     try{
-        const deleteProject = await UserModel.findByIdAndDelete(req.params._id)
-        if(deleteProject){
-            res.status(200).json(deleteProject)
+        const deleteUser = await UserModel.findByIdAndDelete(req.params._id)
+        if(deleteUser){
+            res.status(200).json(deleteUser)
         }else{
             res.status(404)
         }
