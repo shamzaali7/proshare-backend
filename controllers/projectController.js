@@ -12,9 +12,18 @@ router.get("/", async (req, res, next) => {
     }
 })
 
+router.get("/:googleid", async (req, res, next) => {
+    try{
+        const getProjectsByGID = await ProjectModel.find({googleid: req.params.googleid})
+        res.json(getProjectsByGID)
+    }catch(err){
+        next(err)
+    }
+})
+
 router.post("/", async (req, res, next) => {
     try{
-        const user = await UserModel.findOne({googleid: req.body.gid})
+        const user = await UserModel.find({googleid: req.body.gid})
         const createProject = await ProjectModel.create({
             title: req.body.title,
             github: req.body.github,
