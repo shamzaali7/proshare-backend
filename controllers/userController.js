@@ -37,7 +37,7 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.put("/:gid", async(req, res, next) => {
+router.put("/", async(req, res, next) => {
     try{
         const updateUser = await UserModel.findOneAndUpdate(req.body.googleid, req.body, {new: true})
         if(updateUser){
