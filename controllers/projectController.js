@@ -14,7 +14,7 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:googleid", async (req, res, next) => {
     try{
-        const getProjectsByGID = await ProjectModel.find({googleid: req.params.googleid})
+        const getProjectsByGID = await ProjectModel.find({gid: req.params.googleid})
         res.json(getProjectsByGID)
     }catch(err){
         next(err)
