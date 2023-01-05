@@ -8,6 +8,7 @@ const projectSchema = new Schema({
     picture: String,
     code: String,
     gid: String,
+    creator: String,
     comments: [String],
     user: {type: mongoose.Types.ObjectId, ref: "userModel"}
 })

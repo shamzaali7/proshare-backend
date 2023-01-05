@@ -31,6 +31,7 @@ router.post("/", async (req, res, next) => {
             picture: req.body.picture,
             code: req.body.code,
             gid: req.body.gid,
+            creator: req.body.creator,
             comments: req.body.comments,
             user: user._id
         })
