@@ -9,6 +9,8 @@ const projectSchema = new Schema({
     code: String,
     gid: String,
     creator: String,
+    backendRepo: String,
+    backendDeploy: String,
     comments: [String],
     user: {type: mongoose.Types.ObjectId, ref: "userModel"}
 })

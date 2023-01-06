@@ -32,6 +32,8 @@ router.post("/", async (req, res, next) => {
             code: req.body.code,
             gid: req.body.gid,
             creator: req.body.creator,
+            backendRepo: req.body.backendRepo,
+            backendDeploy: req.body.backendDeploy,
             comments: req.body.comments,
             user: user._id
         })
