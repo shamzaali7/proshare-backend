@@ -29,7 +29,6 @@ router.post("/", async (req, res, next) => {
             github: req.body.github,
             deployedLink: req.body.deployedLink,
             picture: req.body.picture,
-            code: req.body.code,
             gid: req.body.gid,
             creator: req.body.creator,
             backendRepo: req.body.backendRepo,
