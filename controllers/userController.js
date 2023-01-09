@@ -25,7 +25,10 @@ router.post("/", async (req, res, next) => {
         const createUser = await UserModel.create({
             googleid: req.body.googleid,
             email: req.body.email,
-            name: req.body.name
+            name: req.body.name,
+            profilePicture: req.body.profilePicture,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName
         })
         if (createUser){
             res.status(200).json(createUser)
