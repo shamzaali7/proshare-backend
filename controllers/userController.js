@@ -1,4 +1,5 @@
 const express = require("express")
+const userModel = require("../models/userModel")
 const router = express.Router()
 const UserModel = require('../models/userModel')
 
@@ -42,7 +43,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/", async(req, res, next) => {
     try{
-        const updateUser = await UserModel.findByIdAndUpdate(req.body.googleid, req.body, {new: true})
+        const updateUser = await UserModel.findByIdAndUpdate({googleid: req.body.googleid}, req.body, {new: true})
         if(updateUser){
             res.status(200).json(updateUser)
         }else{
