@@ -41,10 +41,9 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.put("/:googleid", async(req, res, next) => {
+router.put("/", async(req, res, next) => {
     try{
-        const currentUser = await UserModel.find({googleid: req.body.googleid})
-        const updateUser = await UserModel.findByIdAndUpdate(currentUser._id, req.body, {new: true})
+        const updateUser = await UserModel.findByIdAndUpdate(req.body._id, req.body, {new: true})
         if(updateUser){
             res.status(200).json(updateUser)
         }else{
