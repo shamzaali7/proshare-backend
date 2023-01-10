@@ -6,7 +6,7 @@ const userSchema = new Schema({
     email: String,
     name: String,
     profilePicture: {
-        data: Blob,
+        data: Buffer,
         contentType: String
     },
     firstName: String,
