@@ -5,10 +5,7 @@ const userSchema = new Schema({
     googleid: String,
     email: String,
     name: String,
-    profilePicture: {
-        data: Buffer,
-        contentType: String
-    },
+    profilePicture: String,
     firstName: String,
     lastName: String
 })
