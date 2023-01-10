@@ -13,6 +13,22 @@ app.get("/", (req, res) => {
     res.redirect("/api/projects")
 });
 
+app.post("/upload", (req, res, next) => {
+	let file = req.files.file
+	const fName = req.files.file.name
+	uploadFile.mv(
+		`${__dirname}/public/files/${fName}`,
+		function (err) {
+		  if (err) {
+			return res.status(500).send(err)
+		  }
+		  res.json({
+			file: `public/${fName}`,
+		  })
+		},
+	  )
+})
+
 const userController = require("./controllers/userController")
 app.use("/api/users", userController)
 const projectController = require("./controllers/projectController")
