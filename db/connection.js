@@ -6,7 +6,7 @@ require('dotenv').config();
 if (process.env.NODE_ENV === "production") {
     mongoURI = process.env.DB_URL;
   } else {
-    mongoURI = "mongodb://localhost/Proshare";
+    mongoURI = "mongodb://localhost/3000";
   }  
 const database = mongoose.connection;
 
