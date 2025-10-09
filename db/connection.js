@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === "production") {
 const database = mongoose.connection;
 
 mongoose
-    .connect(process.env.DB_URL, {useNewUrlParser: true, useUnifiedTopology: true})
+    .connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
     .then((instance) => 
     console.log(`connected to db: ${instance.connections[0].name}`)
     )
