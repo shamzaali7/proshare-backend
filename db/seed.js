@@ -1,34 +1,60 @@
 const mongoose = require("./connection")
 const Project = require("../models/projectModel")
 const User = require("../models/userModel")
+const Conversation = require("../models/conversationModel")
+const Message = require("../models/messageModel")
 const projectSeed = require("./projectSeed.json")
 const userSeed = require("./userSeed.json")
 
-User.deleteMany({}).then(() => {
+Promise.all([
+    User.deleteMany({}),
+    Project.deleteMany({}),
+    Conversation.deleteMany({}),
+    Message.deleteMany({})
+]).then(() => {
+    console.log("Database cleared");
+    
+    // Seed users
     userSeed.forEach(user => {
-        User.insertMany({
+        User.create({
             googleid: user.googleid,
             email: user.email,
-            name: user.name
-        }).then(res => console.log(res))
-        .then((err) => console.log(err))
+            name: user.name,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profilePicture: user.profilePicture
+        }).then(res => console.log("User created:", res.name))
+        .catch((err) => console.log("Error creating user:", err))
     })
-})
 
-Project.deleteMany({}).then(async () => {
-    for(i=0; i<projectSeed.length; i++){
-        Project.create({
-            title: projectSeed[i].title,
-            github: projectSeed[i].github,
-            deployedLink: projectSeed[i].deployedLink,
-            picture: projectSeed[i].picture,
-            code: projectSeed[i].code,
-            comments: projectSeed[i].comments,
-            gid: projectSeed[i].gid,
-        }, 
-        async function (err, res){
-            const newProjectUser = await User.findOne({googleid : res.gid});
-            res.user = newProjectUser._id;
-            await res.save();
-        })
-}})
+    // Seed projects
+    projectSeed.forEach(async (projectData, i) => {
+        try {
+            const project = await Project.create({
+                title: projectData.title,
+                github: projectData.github,
+                deployedLink: projectData.deployedLink,
+                picture: projectData.picture,
+                code: projectData.code,
+                comments: projectData.comments,
+                gid: projectData.gid,
+                creator: projectData.creator,
+                backendRepo: projectData.backendRepo,
+                backendDeploy: projectData.backendDeploy
+            });
+            
+            const newProjectUser = await User.findOne({googleid : project.gid});
+            if (newProjectUser) {
+                project.user = newProjectUser._id;
+                await project.save();
+                console.log("Project created:", project.title);
+            }
+        } catch(err) {
+            console.log("Error creating project:", err);
+        }
+    });
+    
+    console.log("Seeding complete");
+}).catch(err => {
+    console.log("Error in seeding:", err);
+});

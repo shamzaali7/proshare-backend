@@ -1,140 +1,140 @@
-const express = require("express")
-const router = express.Router()
-const multer = require("multer")
-const { GridFsStorage } = require("multer-gridfs-storage")
-const UserModel = require("../models/userModel")
-const mongoose = require("../db/connection.js")
-const path = require("path")
-const crypto = require("crypto")
+const express = require("express");
+const router = express.Router();
+const cloudinary = require('cloudinary').v2;
+const fileUpload = require('express-fileupload');
 
-// Set up GridFS storage
-const storage = new GridFsStorage({
-    url: process.env.NODE_ENV === "production" 
-        ? process.env.DB_URL 
-        : "mongodb://localhost/Proshare",
-    file: (req, file) => {
-        return new Promise((resolve, reject) => {
-            crypto.randomBytes(16, (err, buf) => {
-                if (err) {
-                    return reject(err)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+router.post("/profile-picture", async (req, res, next) => {
+    try {
+        if (!req.files || !req.files.image) {
+            return res.status(400).json({ error: "No image file uploaded" });
+        }
+
+        const file = req.files.image;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return res.status(400).json({ 
+                error: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed" 
+            });
+        }
+
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            return res.status(400).json({ 
+                error: "File too large. Maximum size is 5MB" 
+            });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'proshare/profile-pictures',
+                    transformation: [
+                        { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+                        { quality: 'auto:good' }
+                    ]
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
                 }
-                const filename = buf.toString("hex") + path.extname(file.originalname)
-                const fileInfo = {
-                    filename: filename,
-                    bucketName: "profile_pictures"
-                }
-                resolve(fileInfo)
-            })
-        })
+            );
+            uploadStream.end(file.data);
+        });
+
+        res.json({
+            success: true,
+            url: result.secure_url,
+            publicId: result.public_id
+        });
+
+    } catch (err) {
+        console.error("Error uploading profile picture:", err);
+        res.status(500).json({ 
+            error: "Failed to upload image",
+            details: err.message 
+        });
     }
-})
+});
 
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
-        if (allowedMimes.includes(file.mimetype)) {
-            cb(null, true)
+router.post("/project-image", async (req, res, next) => {
+    try {
+        if (!req.files || !req.files.image) {
+            return res.status(400).json({ error: "No image file uploaded" });
+        }
+
+        const file = req.files.image;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return res.status(400).json({ 
+                error: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed" 
+            });
+        }
+
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            return res.status(400).json({ 
+                error: "File too large. Maximum size is 10MB" 
+            });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'proshare/project-images',
+                    transformation: [
+                        { width: 1200, crop: 'limit' },
+                        { quality: 'auto:good' }
+                    ]
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            uploadStream.end(file.data);
+        });
+
+        res.json({
+            success: true,
+            url: result.secure_url,
+            publicId: result.public_id
+        });
+
+    } catch (err) {
+        console.error("Error uploading project image:", err);
+        res.status(500).json({ 
+            error: "Failed to upload image",
+            details: err.message 
+        });
+    }
+});
+
+router.delete("/image/:publicId", async (req, res, next) => {
+    try {
+        const publicId = req.params.publicId.replace(/_/g, '/');
+        
+        const result = await cloudinary.uploader.destroy(publicId);
+        
+        if (result.result === 'ok') {
+            res.json({ success: true, message: "Image deleted successfully" });
         } else {
-            cb(new Error("Invalid file type. Only images are allowed."))
+            res.status(404).json({ error: "Image not found" });
         }
-    }
-})
-
-// Upload profile picture
-router.post("/profile-picture/:userId", upload.single("profilePicture"), async (req, res, next) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: "No file uploaded" })
-        }
-
-        const { userId } = req.params
-        const fileId = req.file.id.toString()
-        const filename = req.file.filename
-        
-        // Construct the download URL
-        const imageUrl = `/api/files/${fileId}`
-
-        // Update user's profile picture
-        const updatedUser = await UserModel.findByIdAndUpdate(
-            userId,
-            { profilePicture: imageUrl },
-            { new: true }
-        )
-
-        if (!updatedUser) {
-            return res.status(404).json({ error: "User not found" })
-        }
-
-        res.status(200).json({
-            message: "Profile picture uploaded successfully",
-            user: updatedUser,
-            fileId: fileId,
-            filename: filename
-        })
     } catch (err) {
-        next(err)
+        console.error("Error deleting image:", err);
+        res.status(500).json({ 
+            error: "Failed to delete image",
+            details: err.message 
+        });
     }
-})
+});
 
-// Get file by ID (for serving uploaded images)
-router.get("/:fileId", async (req, res, next) => {
-    try {
-        const { fileId } = req.params
-
-        // Convert fileId to MongoDB ObjectId
-        const objectId = new mongoose.Types.ObjectId(fileId)
-
-        // Get GridFS bucket
-        const db = mongoose.connection.db
-        const bucket = new mongoose.mongo.GridFSBucket(db, {
-            bucketName: "profile_pictures"
-        })
-
-        // Check if file exists
-        const files = await db.collection("profile_pictures.files").find({ _id: objectId }).toArray()
-        
-        if (!files || files.length === 0) {
-            return res.status(404).json({ error: "File not found" })
-        }
-
-        res.set("Content-Type", files[0].contentType || "image/jpeg")
-        
-        bucket.openDownloadStream(objectId).pipe(res)
-    } catch (err) {
-        next(err)
-    }
-})
-
-// Delete file by ID
-router.delete("/:fileId/:userId", async (req, res, next) => {
-    try {
-        const { fileId, userId } = req.params
-
-        // Convert fileId to MongoDB ObjectId
-        const objectId = new mongoose.Types.ObjectId(fileId)
-
-        // Get GridFS bucket
-        const db = mongoose.connection.db
-        const bucket = new mongoose.mongo.GridFSBucket(db, {
-            bucketName: "profile_pictures"
-        })
-
-        // Delete file
-        await bucket.delete(objectId)
-
-        // Update user to remove profilePicture reference
-        await UserModel.findByIdAndUpdate(
-            userId,
-            { profilePicture: null },
-            { new: true }
-        )
-
-        res.status(200).json({ message: "File deleted successfully" })
-    } catch (err) {
-        next(err)
-    }
-})
-
-module.exports = router
+module.exports = router;

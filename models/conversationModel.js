@@ -1,30 +1,35 @@
-const mongoose = require("../db/connection.js")
-const Schema = mongoose.Schema
+const mongoose = require("../db/connection.js");
+const Schema = mongoose.Schema;
 
 const conversationSchema = new Schema({
     participants: [{
-        type: String, // googleid of participants
+        type: String,
         required: true
     }],
-    participantDetails: [{
-        googleid: String,
-        name: String,
-        email: String,
-        profilePicture: String
-    }],
-    lastMessage: String,
-    lastMessageTime: {
-        type: Date,
-        default: Date.now
+    lastMessage: {
+        text: String,
+        senderId: String,
+        timestamp: Date
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
-}, { timestamps: true })
+    updatedAt: { type: Date, default: Date.now }
+}, {
+    timestamps: true
+});
 
-module.exports = mongoose.model("Conversation", conversationSchema)
+conversationSchema.index({ participants: 1 });
+
+conversationSchema.statics.findOrCreate = async function(user1Id, user2Id) {
+    let conversation = await this.findOne({
+        participants: { $all: [user1Id, user2Id] }
+    });
+
+    if (!conversation) {
+        conversation = await this.create({
+            participants: [user1Id, user2Id]
+        });
+    }
+
+    return conversation;
+};
+
+module.exports = mongoose.model("Conversation", conversationSchema);

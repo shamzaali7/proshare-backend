@@ -1,183 +1,164 @@
-const express = require("express")
-const router = express.Router()
-const MessageModel = require("../models/messageModel")
-const ConversationModel = require("../models/conversationModel")
-const UserModel = require("../models/userModel")
+const express = require("express");
+const router = express.Router();
+const MessageModel = require('../models/messageModel');
+const ConversationModel = require('../models/conversationModel');
+const UserModel = require('../models/userModel');
 
 // Get all conversations for a user
 router.get("/conversations/:googleid", async (req, res, next) => {
     try {
-        const { googleid } = req.params
+        const { googleid } = req.params;
         
+        // Find all conversations where user is a participant
         const conversations = await ConversationModel.find({
             participants: googleid
-        }).sort({ updatedAt: -1 })
-        
-        res.status(200).json(conversations)
-    } catch (err) {
-        next(err)
-    }
-})
+        }).sort({ updatedAt: -1 });
 
-// Get specific conversation with messages
+        // Get participant details and unread count for each conversation
+        const conversationsWithDetails = await Promise.all(
+            conversations.map(async (conversation) => {
+                const otherParticipantId = conversation.participants.find(
+                    p => p !== googleid
+                );
+                
+                const otherParticipant = await UserModel.findOne({ 
+                    googleid: otherParticipantId 
+                });
+
+                // Count unread messages
+                const unreadCount = await MessageModel.countDocuments({
+                    conversationId: conversation._id,
+                    senderId: { $ne: googleid },
+                    read: false
+                });
+
+                return {
+                    id: conversation._id,
+                    participant: otherParticipant || {
+                        googleid: otherParticipantId,
+                        name: "Unknown User",
+                        email: ""
+                    },
+                    lastMessage: conversation.lastMessage?.text || "",
+                    lastMessageTime: conversation.lastMessage?.timestamp || conversation.updatedAt,
+                    unreadCount
+                };
+            })
+        );
+
+        res.json(conversationsWithDetails);
+    } catch (err) {
+        console.error("Error getting conversations:", err);
+        next(err);
+    }
+});
+
+// Get messages for a specific conversation
 router.get("/conversation/:conversationId", async (req, res, next) => {
     try {
-        const { conversationId } = req.params
+        const { conversationId } = req.params;
         
-        const conversation = await ConversationModel.findById(conversationId)
-        if (!conversation) {
-            return res.status(404).json({ error: "Conversation not found" })
-        }
-        
-        const messages = await MessageModel.find({
-            conversationId: conversationId
-        }).sort({ timestamp: 1 })
-        
-        res.status(200).json({
-            conversation,
-            messages
-        })
-    } catch (err) {
-        next(err)
-    }
-})
+        const messages = await MessageModel.find({ 
+            conversationId 
+        }).sort({ createdAt: 1 });
 
-// Create or get conversation between two users
-router.post("/conversation/start", async (req, res, next) => {
-    try {
-        const { userId1, userId2 } = req.body
-        
-        if (!userId1 || !userId2) {
-            return res.status(400).json({ error: "Both user IDs are required" })
-        }
-        
-        // Check if conversation already exists
-        let conversation = await ConversationModel.findOne({
-            participants: {
-                $all: [userId1, userId2]
-            }
-        })
-        
-        if (conversation) {
-            return res.status(200).json(conversation)
-        }
-        
-        // Get user details
-        const user1 = await UserModel.findOne({ googleid: userId1 })
-        const user2 = await UserModel.findOne({ googleid: userId2 })
-        
-        if (!user1 || !user2) {
-            return res.status(404).json({ error: "One or both users not found" })
-        }
-        
-        // Create new conversation
-        const newConversation = await ConversationModel.create({
-            participants: [userId1, userId2],
-            participantDetails: [
-                {
-                    googleid: user1.googleid,
-                    name: user1.name,
-                    email: user1.email,
-                    profilePicture: user1.profilePicture
-                },
-                {
-                    googleid: user2.googleid,
-                    name: user2.name,
-                    email: user2.email,
-                    profilePicture: user2.profilePicture
-                }
-            ],
-            lastMessage: "",
-            lastMessageTime: new Date()
-        })
-        
-        res.status(200).json(newConversation)
+        res.json(messages);
     } catch (err) {
-        next(err)
+        console.error("Error getting messages:", err);
+        next(err);
     }
-})
+});
 
-// Send a message
-router.post("/send", async (req, res, next) => {
+// Send a new message
+router.post("/", async (req, res, next) => {
     try {
-        const { conversationId, senderId, senderName, text } = req.body
-        
-        if (!conversationId || !senderId || !text) {
+        const { senderId, receiverId, senderName, text } = req.body;
+
+        if (!senderId || !receiverId || !text) {
             return res.status(400).json({ 
-                error: "conversationId, senderId, and text are required" 
-            })
+                error: "Missing required fields: senderId, receiverId, text" 
+            });
         }
-        
+
+        // Find or create conversation
+        const conversation = await ConversationModel.findOrCreate(
+            senderId, 
+            receiverId
+        );
+
         // Create message
-        const newMessage = await MessageModel.create({
-            conversationId,
+        const message = await MessageModel.create({
+            conversationId: conversation._id,
             senderId,
             senderName,
             text,
-            timestamp: new Date()
-        })
-        
+            read: false
+        });
+
         // Update conversation's last message
-        await ConversationModel.findByIdAndUpdate(
-            conversationId,
-            {
-                lastMessage: text,
-                lastMessageTime: new Date(),
-                updatedAt: new Date()
-            },
-            { new: true }
-        )
-        
-        res.status(200).json(newMessage)
+        conversation.lastMessage = {
+            text,
+            senderId,
+            timestamp: message.createdAt
+        };
+        conversation.updatedAt = new Date();
+        await conversation.save();
+
+        res.status(201).json({
+            message,
+            conversationId: conversation._id
+        });
     } catch (err) {
-        next(err)
+        console.error("Error sending message:", err);
+        next(err);
     }
-})
+});
 
 // Mark messages as read
 router.put("/read", async (req, res, next) => {
     try {
-        const { conversationId, userId } = req.body
-        
-        if (!conversationId || !userId) {
-            return res.status(400).json({ 
-                error: "conversationId and userId are required" 
-            })
-        }
-        
-        // Mark all messages in conversation as read (that aren't from the user)
-        const result = await MessageModel.updateMany(
+        const { conversationId, userId } = req.body;
+
+        await MessageModel.updateMany(
             {
                 conversationId,
-                senderId: { $ne: userId }
+                senderId: { $ne: userId },
+                read: false
             },
-            { read: true }
-        )
-        
-        res.status(200).json({
-            message: "Messages marked as read",
-            modifiedCount: result.modifiedCount
-        })
-    } catch (err) {
-        next(err)
-    }
-})
+            {
+                read: true
+            }
+        );
 
-// Delete a message
-router.delete("/:messageId", async (req, res, next) => {
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Error marking messages as read:", err);
+        next(err);
+    }
+});
+
+// Delete a conversation
+router.delete("/conversation/:conversationId", async (req, res, next) => {
     try {
-        const { messageId } = req.params
-        
-        const deletedMessage = await MessageModel.findByIdAndDelete(messageId)
-        
-        if (!deletedMessage) {
-            return res.status(404).json({ error: "Message not found" })
-        }
-        
-        res.status(200).json(deletedMessage)
-    } catch (err) {
-        next(err)
-    }
-})
+        const { conversationId } = req.params;
 
-module.exports = router
+        // Delete all messages in the conversation
+        await MessageModel.deleteMany({ conversationId });
+        
+        // Delete the conversation
+        const deletedConversation = await ConversationModel.findByIdAndDelete(
+            conversationId
+        );
+
+        if (deletedConversation) {
+            res.json({ success: true, deletedConversation });
+        } else {
+            res.status(404).json({ error: "Conversation not found" });
+        }
+    } catch (err) {
+        console.error("Error deleting conversation:", err);
+        next(err);
+    }
+});
+
+module.exports = router;

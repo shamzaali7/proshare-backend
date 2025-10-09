@@ -1,7 +1,7 @@
-const express = require("express")
-const userModel = require("../models/userModel")
-const router = express.Router()
-const UserModel = require('../models/userModel')
+const express = require("express");
+const userModel = require("../models/userModel");
+const router = express.Router();
+const UserModel = require('../models/userModel');
 
 router.get("/", async (req, res, next) => {
     try{
@@ -54,6 +54,27 @@ router.put("/", async(req, res, next) => {
     }
 })
 
+router.put("/profile-picture/:googleid", async(req, res, next) => {
+    try{
+        const { googleid } = req.params;
+        const { profilePicture } = req.body;
+        
+        const updateUser = await UserModel.findOneAndUpdate(
+            { googleid },
+            { profilePicture },
+            { new: true }
+        );
+        
+        if(updateUser){
+            res.status(200).json(updateUser)
+        }else{
+            res.sendStatus(404)
+        }
+    }catch(err){
+        next(err)
+    }
+})
+
 router.delete("/:_id", async (req, res, next) => {
     try{
         const deleteUser = await UserModel.findByIdAndDelete(req.params._id)
@@ -67,4 +88,4 @@ router.delete("/:_id", async (req, res, next) => {
     }
 })
 
-module.exports = router
+module.exports = router;
