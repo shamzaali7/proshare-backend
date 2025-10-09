@@ -12,7 +12,7 @@ const projectSchema = new Schema({
     backendRepo: String,
     backendDeploy: String,
     comments: [String],
-    user: {type: mongoose.Types.ObjectId, ref: "userModel"}
+    user: {type: Schema.Types.ObjectId, ref: "userModel"}
 })
 
 module.exports = mongoose.model("Project", projectSchema)

@@ -23,7 +23,11 @@ router.get("/:googleid", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
     try{
-        const user = await UserModel.find({googleid: req.body.gid})
+        const user = await UserModel.findOne({googleid: req.body.gid})
+        if (!user) {
+            return res.status(404).json({ error: "User not found" })
+        }
+        
         const createProject = await ProjectModel.create({
             title: req.body.title,
             github: req.body.github,
@@ -33,7 +37,7 @@ router.post("/", async (req, res, next) => {
             creator: req.body.creator,
             backendRepo: req.body.backendRepo,
             backendDeploy: req.body.backendDeploy,
-            comments: req.body.comments,
+            comments: req.body.comments || [],
             user: user._id
         })
         res.status(200).json(createProject)
