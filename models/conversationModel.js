@@ -10,8 +10,7 @@ const conversationSchema = new Schema({
         text: String,
         senderId: String,
         timestamp: Date
-    },
-    updatedAt: { type: Date, default: Date.now }
+    }
 }, {
     timestamps: true
 });

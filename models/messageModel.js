@@ -6,8 +6,7 @@ const messageSchema = new Schema({
     senderId: { type: String, required: true },
     senderName: { type: String, required: true },
     text: { type: String, required: true },
-    read: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
+    read: { type: Boolean, default: false }
 }, {
     timestamps: true
 });
