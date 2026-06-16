@@ -1,25 +1,18 @@
 const request = require('supertest');
-const app = require('../index'); // Assuming the entry point of your application is index.js
+const { expect } = require('chai');
+const { app } = require('../index');
 const ProjectModel = require('../models/projectModel');
 const UserModel = require('../models/userModel');
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-let chai, expect;
-import('chai').then(module => {
-  chai = module;
-  expect = chai.expect;
-  chai.should();
-})
 
 describe('Project Controller', () => {
 
-    // Clean up the database after tests
     afterEach(async () => {
         await ProjectModel.deleteMany();
         await UserModel.deleteMany();
     });
 
-    describe('GET /', () => {
+    describe('GET /api/projects', () => {
         it('should return all projects', async () => {
             const project = new ProjectModel({
                 title: 'Test Project',
@@ -30,18 +23,18 @@ describe('Project Controller', () => {
                 creator: 'test',
                 backendRepo: 'https://backendrepo.com',
                 backendDeploy: 'https://backenddeploy.com',
-                comments: 'test comments',
+                comments: [],
                 user: new mongoose.Types.ObjectId()
             });
             await project.save();
-            const res = await request(app)
-                .get('/projects');
+
+            const res = await request(app).get('/api/projects');
             expect(res.status).to.equal(200);
             expect(res.body).to.be.an('array');
         });
     });
 
-    describe('GET /:googleid', () => {
+    describe('GET /api/projects/:googleid', () => {
         it('should return projects by googleid', async () => {
             const project = new ProjectModel({
                 title: 'Test Project',
@@ -50,22 +43,18 @@ describe('Project Controller', () => {
                 picture: 'test.png',
                 gid: 'test_googleid',
                 creator: 'test',
-                backendRepo: 'https://backendrepo.com',
-                backendDeploy: 'https://backenddeploy.com',
-                comments: 'test comments',
+                comments: [],
                 user: new mongoose.Types.ObjectId()
             });
             await project.save();
 
-            const res = await request(app)
-                .get(`/projects/${project.gid}`);
-
+            const res = await request(app).get(`/api/projects/${project.gid}`);
             expect(res.status).to.equal(200);
             expect(res.body).to.be.an('array');
         });
     });
 
-    describe('POST /', () => {
+    describe('POST /api/projects', () => {
         it('should create a new project', async () => {
             const user = new UserModel({
                 googleid: 'test_googleid',
@@ -74,7 +63,7 @@ describe('Project Controller', () => {
             await user.save();
 
             const res = await request(app)
-                .post('/projects')
+                .post('/api/projects')
                 .send({
                     title: 'New Project',
                     github: 'https://github.com/newproject',
@@ -84,8 +73,7 @@ describe('Project Controller', () => {
                     creator: user.name,
                     backendRepo: 'https://backendrepo.com',
                     backendDeploy: 'https://backenddeploy.com',
-                    comments: 'New project comments',
-                    user: new mongoose.Types.ObjectId()
+                    comments: []
                 });
 
             expect(res.status).to.equal(200);
@@ -93,7 +81,7 @@ describe('Project Controller', () => {
         });
     });
 
-    describe('PUT /', () => {
+    describe('PUT /api/projects', () => {
         it('should update an existing project', async () => {
             const project = new ProjectModel({
                 title: 'Old Project',
@@ -102,26 +90,21 @@ describe('Project Controller', () => {
                 picture: 'oldproject.png',
                 gid: 'test_googleid',
                 creator: 'test',
-                backendRepo: 'https://backendrepo.com',
-                backendDeploy: 'https://backenddeploy.com',
-                comments: 'Old project comments',
+                comments: [],
                 user: new mongoose.Types.ObjectId()
             });
             await project.save();
 
             const res = await request(app)
-                .put('/projects')
-                .send({
-                    _id: project._id,
-                    title: 'Updated Project'
-                });
+                .put('/api/projects')
+                .send({ _id: project._id, title: 'Updated Project' });
 
             expect(res.status).to.equal(200);
             expect(res.body).to.have.property('title', 'Updated Project');
         });
     });
 
-    describe('DELETE /', () => {
+    describe('DELETE /api/projects', () => {
         it('should delete an existing project', async () => {
             const project = new ProjectModel({
                 title: 'Project to Delete',
@@ -130,18 +113,14 @@ describe('Project Controller', () => {
                 picture: 'deleteproject.png',
                 gid: 'test_googleid',
                 creator: 'test',
-                backendRepo: 'https://backendrepo.com',
-                backendDeploy: 'https://backenddeploy.com',
-                comments: 'Project to delete comments',
+                comments: [],
                 user: new mongoose.Types.ObjectId()
             });
             await project.save();
 
             const res = await request(app)
-                .delete('/projects')
-                .send({
-                    _id: project._id
-                });
+                .delete('/api/projects')
+                .send({ _id: project._id });
 
             expect(res.status).to.equal(200);
             expect(res.body).to.have.property('title', 'Project to Delete');

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -112,10 +113,10 @@ io.on("connection", (socket) => {
     });
 });
 
-if (!module.parent) {
+if (require.main === module) {
     server.listen(app.get("port"), () => {
-        console.log(`✅ PORT: ${app.get("port")} 🌟`);
-        console.log(`🔌 WebSocket server running`);
+        console.log(`✅ Server running on port ${app.get("port")}`);
+        console.log(`🔌 WebSocket server active`);
     });
 }
 

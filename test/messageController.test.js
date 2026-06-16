@@ -1,21 +1,14 @@
 const request = require('supertest');
+const { expect } = require('chai');
 const { app } = require('../index');
 const MessageModel = require('../models/messageModel');
 const ConversationModel = require('../models/conversationModel');
 const UserModel = require('../models/userModel');
-let chai, expect;
-
-import('chai').then(module => {
-  chai = module;
-  expect = chai.expect;
-  chai.should();
-})
 
 describe('Message Controller', () => {
-    let user1, user2, conversation;
+    let user1, user2;
 
     beforeEach(async () => {
-        // Create test users
         user1 = await UserModel.create({
             googleid: 'test_user_1',
             email: 'user1@test.com',
@@ -36,7 +29,7 @@ describe('Message Controller', () => {
     });
 
     describe('POST /api/messages', () => {
-        it('should send a message and create conversation', async () => {
+        it('should send a message and create a conversation', async () => {
             const res = await request(app)
                 .post('/api/messages')
                 .send({
@@ -53,9 +46,8 @@ describe('Message Controller', () => {
     });
 
     describe('GET /api/messages/conversations/:googleid', () => {
-        it('should get all conversations for a user', async () => {
-            // Create a conversation first
-            conversation = await ConversationModel.create({
+        it('should return all conversations for a user', async () => {
+            await ConversationModel.create({
                 participants: [user1.googleid, user2.googleid]
             });
 

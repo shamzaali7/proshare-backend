@@ -1,28 +1,23 @@
-const mongoose = require("mongoose")
-mongoose.set('strictQuery', false)
-mongoose.Promise = Promise;
 require('dotenv').config();
+const mongoose = require("mongoose");
 
-if (process.env.NODE_ENV === "production") {
-    mongoURI = process.env.DB_URL;
-  } else {
-    mongoURI = "mongodb://localhost/3000";
-  }  
+mongoose.set('strictQuery', false);
+
+const mongoURI = process.env.NODE_ENV === "production"
+  ? process.env.DB_URL
+  : process.env.DB_URL || "mongodb://localhost:27017/proshare";
+
 const database = mongoose.connection;
 
 mongoose
-    .connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then((instance) => 
-    console.log(`connected to db: ${instance.connections[0].name}`)
+    .connect(mongoURI)
+    .then((instance) =>
+        console.log(`Connected to DB: ${instance.connections[0].name}`)
     )
-    .catch((error) => console.log('Connection failed!', error));
-    
-database.on('error', (err) => console.log(err.message + ' is Mongosh not running?'));
-database.on('connected', () => console.log('mongo connected at: ', mongoURI));
-database.on('disconnected', () => console.log('mongo disconnected'));
+    .catch((error) => console.error('DB connection failed:', error));
 
-database.on('open', () => {
-	console.log('✅ mongo connection made!');
-});
+database.on('error', (err) => console.error('MongoDB error:', err.message));
+database.on('disconnected', () => console.log('MongoDB disconnected'));
+database.on('open', () => console.log('✅ MongoDB connection established'));
 
-module.exports = mongoose
+module.exports = mongoose;
