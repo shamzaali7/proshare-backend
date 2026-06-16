@@ -46,12 +46,15 @@ router.get("/conversations/:googleid", async (req, res, next) => {
                         lastMsgSenderId = latestMsg.senderId;
                         lastMsgTime = latestMsg.createdAt;
                         // Backfill so future requests skip this query
-                        conversation.lastMessage = {
-                            text: latestMsg.text,
-                            senderId: latestMsg.senderId,
-                            timestamp: latestMsg.createdAt
-                        };
-                        conversation.save().catch(() => {});
+                        ConversationModel.findByIdAndUpdate(conversation._id, {
+                            $set: {
+                                lastMessage: {
+                                    text: latestMsg.text,
+                                    senderId: latestMsg.senderId,
+                                    timestamp: latestMsg.createdAt
+                                }
+                            }
+                        }).catch(() => {});
                     }
                 }
 
@@ -119,14 +122,19 @@ router.post("/", async (req, res, next) => {
             read: false
         });
 
-        // Update conversation's last message
-        conversation.lastMessage = {
-            text,
-            senderId,
-            timestamp: message.createdAt
-        };
-        conversation.updatedAt = new Date();
-        await conversation.save();
+        // Update conversation's last message atomically
+        // Using findByIdAndUpdate instead of save() to avoid Mongoose nested-object
+        // change-tracking issues that can silently skip the write.
+        await ConversationModel.findByIdAndUpdate(conversation._id, {
+            $set: {
+                lastMessage: {
+                    text,
+                    senderId,
+                    timestamp: message.createdAt
+                },
+                updatedAt: new Date()
+            }
+        });
 
         res.status(201).json({
             message,
