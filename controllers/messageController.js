@@ -32,6 +32,29 @@ router.get("/conversations/:googleid", async (req, res, next) => {
                     read: false
                 });
 
+                let lastMsgText = conversation.lastMessage?.text || "";
+                let lastMsgSenderId = conversation.lastMessage?.senderId || "";
+                let lastMsgTime = conversation.lastMessage?.timestamp || conversation.updatedAt;
+
+                // Fallback for older conversations that predate the lastMessage cache
+                if (!lastMsgText) {
+                    const latestMsg = await MessageModel.findOne({ conversationId: conversation._id })
+                        .sort({ createdAt: -1 })
+                        .select('text senderId createdAt');
+                    if (latestMsg) {
+                        lastMsgText = latestMsg.text;
+                        lastMsgSenderId = latestMsg.senderId;
+                        lastMsgTime = latestMsg.createdAt;
+                        // Backfill so future requests skip this query
+                        conversation.lastMessage = {
+                            text: latestMsg.text,
+                            senderId: latestMsg.senderId,
+                            timestamp: latestMsg.createdAt
+                        };
+                        conversation.save().catch(() => {});
+                    }
+                }
+
                 return {
                     id: conversation._id,
                     participant: otherParticipant || {
@@ -39,8 +62,9 @@ router.get("/conversations/:googleid", async (req, res, next) => {
                         name: "Unknown User",
                         email: ""
                     },
-                    lastMessage: conversation.lastMessage?.text || "",
-                    lastMessageTime: conversation.lastMessage?.timestamp || conversation.updatedAt,
+                    lastMessage: lastMsgText,
+                    lastMessageSenderId: lastMsgSenderId,
+                    lastMessageTime: lastMsgTime,
                     unreadCount
                 };
             })
