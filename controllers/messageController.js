@@ -32,30 +32,29 @@ router.get("/conversations/:googleid", async (req, res, next) => {
                     read: false
                 });
 
-                let lastMsgText = conversation.lastMessage?.text || "";
-                let lastMsgSenderId = conversation.lastMessage?.senderId || "";
-                let lastMsgTime = conversation.lastMessage?.timestamp || conversation.updatedAt;
+                // Always read the latest message directly from the Message collection.
+                // This is the source of truth — the cached lastMessage field on the
+                // Conversation document can fall out of sync (e.g. after a timeout),
+                // so we don't rely on it for display purposes.
+                const latestMsg = await MessageModel.findOne({ conversationId: conversation._id })
+                    .sort({ createdAt: -1 })
+                    .select('text senderId createdAt');
 
-                // Fallback for older conversations that predate the lastMessage cache
-                if (!lastMsgText) {
-                    const latestMsg = await MessageModel.findOne({ conversationId: conversation._id })
-                        .sort({ createdAt: -1 })
-                        .select('text senderId createdAt');
-                    if (latestMsg) {
-                        lastMsgText = latestMsg.text;
-                        lastMsgSenderId = latestMsg.senderId;
-                        lastMsgTime = latestMsg.createdAt;
-                        // Backfill so future requests skip this query
-                        ConversationModel.findByIdAndUpdate(conversation._id, {
-                            $set: {
-                                lastMessage: {
-                                    text: latestMsg.text,
-                                    senderId: latestMsg.senderId,
-                                    timestamp: latestMsg.createdAt
-                                }
+                const lastMsgText = latestMsg?.text || conversation.lastMessage?.text || "";
+                const lastMsgSenderId = latestMsg?.senderId || conversation.lastMessage?.senderId || "";
+                const lastMsgTime = latestMsg?.createdAt || conversation.lastMessage?.timestamp || conversation.updatedAt;
+
+                // Keep the cache in sync as a background write (best-effort).
+                if (latestMsg && latestMsg.text !== conversation.lastMessage?.text) {
+                    ConversationModel.findByIdAndUpdate(conversation._id, {
+                        $set: {
+                            lastMessage: {
+                                text: latestMsg.text,
+                                senderId: latestMsg.senderId,
+                                timestamp: latestMsg.createdAt
                             }
-                        }).catch(() => {});
-                    }
+                        }
+                    }).catch(() => {});
                 }
 
                 return {
