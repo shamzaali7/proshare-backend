@@ -144,6 +144,8 @@ Base URL: `https://proshare-backend-27b5d2fdd236.herokuapp.com/api`
 }
 ```
 
+> **Note on `googleid`:** this field stores the Google OAuth user ID for Google sign-in users, or the Firebase UID for email/password users. Both are stable string identifiers managed by Firebase.
+
 ---
 
 ### Projects
@@ -177,7 +179,7 @@ Base URL: `https://proshare-backend-27b5d2fdd236.herokuapp.com/api`
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/messages/conversations/:googleid` | Get all conversations for a user (with unread counts) |
+| `GET` | `/messages/conversations/:googleid` | Get all conversations for a user (with unread counts); always reads the latest message directly from the Message collection rather than the cached `lastMessage` field on the Conversation document |
 | `GET` | `/messages/conversation/:conversationId` | Get all messages in a conversation |
 | `POST` | `/messages` | Send a message (creates conversation if needed) |
 | `PUT` | `/messages/read` | Mark messages in a conversation as read |
@@ -254,7 +256,7 @@ The server uses **Socket.io** for real-time messaging. Connect to the root URL.
 ### User
 ```js
 {
-  googleid:       String,
+  googleid:       String,  // Google OAuth ID (Google users) or Firebase UID (email/password users)
   email:          String,
   name:           String,
   firstName:      String,
