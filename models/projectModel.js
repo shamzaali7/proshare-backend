@@ -11,7 +11,7 @@ const projectSchema = new Schema({
     creator: String,
     backendRepo: String,
     backendDeploy: String,
-    comments: [String],
+    comments: [Schema.Types.Mixed],
     user: {type: Schema.Types.ObjectId, ref: "userModel"}
 })
 
